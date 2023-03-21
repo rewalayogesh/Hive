@@ -1,0 +1,39 @@
+Hive shell:
+------------- 
+1. cd training_materials/hive_and_pig/data
+
+2.  tar xvfz ml-data.tgz
+
+3. hive> CREATE TABLE UserRatings 
+   (userid INT, movieid INT, rating INT, 
+   unixtime BIGINT) ROW FORMAT DELIMITED 
+   FIELDS TERMINATED BY '\t' 
+   STORED AS TEXTFILE;
+
+4.  LOAD DATA INPATH '/user/training/u.data' 
+     INTO TABLE UserRatings;
+
+5.   SELECT * FROM UserRatings LIMIT 10;
+
+6.  CREATE TABLE movies_part (movieid int, movie_name string, release_date string, imdb_url string)
+		>PARTITIONED BY (genre string)
+		>ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+
+7. LOAD DATA LOCAL INPATH '/home/training/training_materials/hive_and_pig/data/action.txt' INTO TABLE movies_par PARTITION(genre='action');
+
+>>>>>> 
+hive> LOAD DATA LOCAL INPATH '/home/training/training_materials/hive_and_pig/data/comedy.txt' INTO TABLE movies_part PARTITION(genre='comedy');
+>>>>>>
+hive> LOAD DATA LOCAL INPATH '/home/training/training_materials/hive_and_pig/data/thriller.txt' INTO TABLE movies_part PARTITION(genre='thriller');
+
+8. ESCRIBE movies_part;
+
+9.  SHOW PARTITIONS movies_part;
+
+10. CREATE TABLE rating_buckets (userid int, movieid int, rating int, unixtime int) CLUSTERED BY (movieid) INTO 8 BUCKETS;
+
+11.  SET hive.enforce.bucketing = true;
+>>>>
+hive> INSERT OVERWRITE TABLE rating_buckets SELECT * FROM  UserRatings CLUSTER BY movieid;
+
+12.  SELECT count(*) FROM rating_buckets TABLESAMPLE (BUCKET 3 OUT OF 8);

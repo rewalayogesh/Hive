@@ -1,0 +1,192 @@
+[training@localhost ~]$ hive
+Logging initialized using configuration in file:/etc/hive/conf.dist/hive-log4j.properties
+Hive history file=/tmp/training/hive_job_log_training_202303021737_1679000674.txt
+hive> create table useratings  
+    > (userid INT,)
+    > ;[training@localhost ~]$ 
+
+
+
+[training@localhost ~]$ hive
+Logging initialized using configuration in file:/etc/hive/conf.dist/hive-log4j.properties
+Hive history file=/tmp/training/hive_job_log_training_202303021738_1353255344.txt
+
+hive> create table UserRatings
+    > (userid INT,movieid INT,rating INT,unixtime BIGINT)
+    > ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'
+    > STORED AS TEXTFILE;
+OK
+Time taken: 2.102 seconds
+
+
+hive> LOAD DATA INPATH 'HiveFile/u.data' INTO TABLE UserRatings;
+Loading data to table default.userratings
+OK
+Time taken: 0.338 seconds
+
+
+hive> select * from UserRatings limit 10; 
+OK
+196	242	3	881250949
+186	302	3	891717742
+22	377	1	878887116
+244	51	2	880606923
+166	346	1	886397596
+298	474	4	884182806
+115	265	2	881171488
+253	465	5	891628467
+305	451	3	886324817
+6	86	3	883603013
+Time taken: 0.305 seconds
+
+
+
+hive> create table movie_part (movieid INT , movie_name string , release_date string, imdb_url string) 
+    > PARTITIONED BY (genre string)
+    > ROW FORMAT DELIMITED FIELDS TERMINATED BY ',';
+OK
+Time taken: 0.168 seconds
+
+
+hive> LOAD DATA LOCAL INPATH '/home/training/HiveWorkSpace/action.txt' INTO TABLE movie_part PARTITION(genre='action');
+Copying data from file:/home/training/HiveWorkSpace/action.txt
+Copying file: file:/home/training/HiveWorkSpace/action.txt
+Loading data to table default.movie_part partition (genre=action)
+OK
+Time taken: 0.448 seconds
+
+
+hive> LOAD DATA LOCAL INPATH '/home/training/HiveWorkSpace/comedy.txt' INTO TABLE movie_part PARTITION(genre='comedy');
+Copying data from file:/home/training/HiveWorkSpace/comedy.txt
+Copying file: file:/home/training/HiveWorkSpace/comedy.txt
+Loading data to table default.movie_part partition (genre=comedy)
+OK
+Time taken: 0.236 seconds
+
+
+hive> LOAD DATA LOCAL INPATH '/home/training/HiveWorkSpace/thriller.txt' INTO TABLE movie_part PARTITION(genre='thriller');
+Copying data from file:/home/training/HiveWorkSpace/thriller.txt
+Copying file: file:/home/training/HiveWorkSpace/thriller.txt
+Loading data to table default.movie_part partition (genre=thriller)
+OK
+Time taken: 0.326 seconds
+
+
+
+hive> describe movie_part;
+OK
+movieid	int	
+movie_name	string	
+release_date	string	
+imdb_url	string	
+genre	string	
+Time taken: 0.081 seconds
+
+
+hive> show partitions movie_part;
+OK
+genre=action
+genre=comedy
+genre=thriller
+Time taken: 0.081 seconds
+
+
+hive> hadoop fs -ls /user/hive/warehouse/movie_part
+    > ;
+FAILED: ParseException line 1:0 cannot recognize input near 'hadoop' 'fs' '-'
+
+hive> hadoop fs -ls /user/hive/warehouse/movie_part;
+FAILED: ParseException line 1:0 cannot recognize input near 'hadoop' 'fs' '-'
+
+hive> select * from movie_part where 'genre = action' limit 10;
+FAILED: SemanticException MetaException(message:Error parsing partition filter : MismatchedSetException(-1!=null))
+
+
+hive> create table rating_buckets(userid int, movieid int, rating int, unixtime int)
+    > clustered by (movieid) into 8 buckets;
+OK
+Time taken: 0.146 seconds
+
+
+hive> set hive.enforce.bucketing = true;
+
+
+hive> insert overwrite table rating_buckets select * from Userratings clustered by movieid;
+FAILED: ParseException line 1:64 mismatched input 'clustered' expecting EOF near 'Userratings'
+
+
+
+hive> insert overwrite table rating_buckets select * from UserRatings clustered by movieid;
+FAILED: ParseException line 1:64 mismatched input 'clustered' expecting EOF near 'UserRatings'
+
+
+
+hive> insert overwrite table rating_buckets select * from UserRatings cluster by movieid;  
+Total MapReduce jobs = 1
+Launching Job 1 out of 1
+Number of reduce tasks determined at compile time: 8
+In order to change the average load for a reducer (in bytes):
+  set hive.exec.reducers.bytes.per.reducer=<number>
+In order to limit the maximum number of reducers:
+  set hive.exec.reducers.max=<number>
+In order to set a constant number of reducers:
+  set mapred.reduce.tasks=<number>
+Starting Job = job_202303021703_0001, Tracking URL = http://0.0.0.0:50030/jobdetails.jsp?jobid=job_202303021703_0001
+Kill Command = /usr/lib/hadoop/bin/hadoop job  -Dmapred.job.tracker=0.0.0.0:8021 -kill job_202303021703_0001
+Hadoop job information for Stage-1: number of mappers: 1; number of reducers: 8
+2023-03-02 18:17:45,652 Stage-1 map = 0%,  reduce = 0%
+2023-03-02 18:17:48,713 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 1.99 sec
+2023-03-02 18:17:49,728 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 1.99 sec
+2023-03-02 18:17:50,748 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 1.99 sec
+2023-03-02 18:17:51,757 Stage-1 map = 100%,  reduce = 13%, Cumulative CPU 4.49 sec
+2023-03-02 18:17:52,765 Stage-1 map = 100%,  reduce = 25%, Cumulative CPU 7.15 sec
+2023-03-02 18:17:53,774 Stage-1 map = 100%,  reduce = 25%, Cumulative CPU 7.15 sec
+2023-03-02 18:17:54,784 Stage-1 map = 100%,  reduce = 38%, Cumulative CPU 9.61 sec
+2023-03-02 18:17:55,796 Stage-1 map = 100%,  reduce = 50%, Cumulative CPU 12.01 sec
+2023-03-02 18:17:56,806 Stage-1 map = 100%,  reduce = 50%, Cumulative CPU 12.01 sec
+2023-03-02 18:17:57,818 Stage-1 map = 100%,  reduce = 50%, Cumulative CPU 12.01 sec
+2023-03-02 18:17:58,830 Stage-1 map = 100%,  reduce = 75%, Cumulative CPU 16.95 sec
+2023-03-02 18:17:59,852 Stage-1 map = 100%,  reduce = 75%, Cumulative CPU 16.95 sec
+2023-03-02 18:18:00,862 Stage-1 map = 100%,  reduce = 75%, Cumulative CPU 16.95 sec
+2023-03-02 18:18:01,872 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 21.8 sec
+2023-03-02 18:18:02,901 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 21.8 sec
+MapReduce Total cumulative CPU time: 21 seconds 800 msec
+Ended Job = job_202303021703_0001
+Loading data to table default.rating_buckets
+rmr: DEPRECATED: Please use 'rm -r' instead.
+Deleted /user/hive/warehouse/rating_buckets
+100000 Rows loaded to rating_buckets
+MapReduce Jobs Launched: 
+Job 0: Map: 1  Reduce: 8   Cumulative CPU: 21.8 sec   HDFS Read: 0 HDFS Write: 0 SUCCESS
+Total MapReduce CPU Time Spent: 21 seconds 800 msec
+OK
+Time taken: 21.491 seconds
+
+
+hive> select count(*) from rating_buckets tablesample (bucket 3 out of 8);
+Total MapReduce jobs = 1
+Launching Job 1 out of 1
+Number of reduce tasks determined at compile time: 1
+In order to change the average load for a reducer (in bytes):
+  set hive.exec.reducers.bytes.per.reducer=<number>
+In order to limit the maximum number of reducers:
+  set hive.exec.reducers.max=<number>
+In order to set a constant number of reducers:
+  set mapred.reduce.tasks=<number>
+Starting Job = job_202303021703_0002, Tracking URL = http://0.0.0.0:50030/jobdetails.jsp?jobid=job_202303021703_0002
+Kill Command = /usr/lib/hadoop/bin/hadoop job  -Dmapred.job.tracker=0.0.0.0:8021 -kill job_202303021703_0002
+Hadoop job information for Stage-1: number of mappers: 1; number of reducers: 1
+2023-03-02 18:19:03,375 Stage-1 map = 0%,  reduce = 0%
+2023-03-02 18:19:05,387 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 0.98 sec
+2023-03-02 18:19:06,394 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 0.98 sec
+2023-03-02 18:19:07,401 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 2.24 sec
+2023-03-02 18:19:08,411 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 2.24 sec
+2023-03-02 18:19:09,423 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 2.24 sec
+MapReduce Total cumulative CPU time: 2 seconds 240 msec
+Ended Job = job_202303021703_0002
+MapReduce Jobs Launched: 
+Job 0: Map: 1  Reduce: 1   Cumulative CPU: 2.24 sec   HDFS Read: 0 HDFS Write: 0 SUCCESS
+Total MapReduce CPU Time Spent: 2 seconds 240 msec
+OK
+12527
+Time taken: 8.583 seconds

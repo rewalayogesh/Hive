@@ -1,0 +1,52 @@
+[training@localhost ~]$ pwd
+/home/training
+
+[training@localhost ~]$ ls -l
+total 60
+-rw-rw-r--  1 training training    0 Mar  2 17:41 derby.log
+drwxr-xr-x  2 training training 4096 Feb 28 16:44 Desktop
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Documents
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Downloads
+drwxr-xr-x  9 training training 4096 Sep 20  2012 eclipse
+drwxrwxr-x  3 training training 4096 Mar  2 17:33 HiveWorkSpace
+drwxr-xr-x  2 training training 4096 Dec 18  2012 lib
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Music
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Pictures
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Public
+drwxrwxr-x  2 training training 4096 Dec 18  2012 scripts
+drwxrwxr-x 13 training training 4096 Nov  9  2012 src
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Templates
+drwxrwxr-x  5 training training 4096 Dec 18  2012 training_materials
+drwxr-xr-x  2 training training 4096 Feb 28 15:38 Videos
+drwxrwxr-x 15 training training 4096 Feb 28 15:36 workspace
+
+[training@localhost ~]$ cd HiveWorkSpace
+
+[training@localhost HiveWorkSpace]$ ls -l
+total 4840
+drwxrws--- 2 training training    4096 Mar  8  2001 ml-data
+-rwxrwxr-x 1 training training 4948405 Dec 18  2012 ml-data.tgz
+
+[training@localhost HiveWorkSpace]$ cd ml_data
+bash: cd: ml_data: No such file or directory
+
+[training@localhost HiveWorkSpace]$ cd ml_data
+bash: cd: ml_data: No such file or directory
+
+[training@localhost HiveWorkSpace]$ cd ml-data
+
+[training@localhost ml-data]$ hadoop fs -ls
+
+[training@localhost ml-data]$ hadoop fs -mkdir HiveFile
+
+[training@localhost ml-data]$ hadoop fs -ls 
+Found 1 items
+drwxr-xr-x   - training supergroup          0 2023-03-02 17:44 HiveFile
+
+[training@localhost ml-data]$ hadoop fs -put u.data HiveFile
+
+[training@localhost ml-data]$ hadoop fs -ls /user/hive/warehouse/movie_part
+Found 3 items
+drwxr-xr-x   - training supergroup          0 2023-03-02 18:01 /user/hive/warehouse/movie_part/genre=action
+drwxr-xr-x   - training supergroup          0 2023-03-02 18:02 /user/hive/warehouse/movie_part/genre=comedy
+drwxr-xr-x   - training supergroup          0 2023-03-02 18:02 /user/hive/warehouse/movie_part/genre=thriller
